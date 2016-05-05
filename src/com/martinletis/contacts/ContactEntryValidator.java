@@ -42,8 +42,10 @@ public class ContactEntryValidator {
   private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
 
   public static void main(String[] args) throws Exception {
-    Preconditions.checkArgument(args.length == 1);
-    Preconditions.checkArgument(!args[0].isEmpty());
+    Preconditions.checkArgument(args.length == 1, "Invoke with 'clientSecret'");
+
+    String clientSecret = args[0];
+    Preconditions.checkArgument(!clientSecret.isEmpty());
 
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
@@ -52,7 +54,7 @@ public class ContactEntryValidator {
         Joiner.on(File.separator).join(System.getProperty("user.home"), "tmp", "datastore"));
 
     AuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-        transport, jsonFactory, CLIENT_ID, args[0], Collections.singleton(CONTACTS_SCOPE))
+        transport, jsonFactory, CLIENT_ID, clientSecret, Collections.singleton(CONTACTS_SCOPE))
         .setAccessType("offline")
         .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
         .build();
