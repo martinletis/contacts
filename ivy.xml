@@ -22,7 +22,8 @@
     <info organisation="martinletis" module="contacts" />
 	<dependencies>
         <dependency org="com.google.api-client" name="google-api-client" rev="1.22.0"/>
-        <dependency org="com.google.gdata" name="core" rev="1.47.1"/>
+        <dependency org="com.google.api-client" name="google-api-client-java6" rev="1.22.0"/>
+        <dependency org="com.google.apis" name="google-api-services-people" rev="v1-rev5-1.22.0"/>
         <dependency org="com.googlecode.libphonenumber" name="libphonenumber" rev="7.0.7"/>
 	</dependencies>
 </ivy-module>

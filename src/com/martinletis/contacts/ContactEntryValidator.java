@@ -10,23 +10,27 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.people.v1.People;
+import com.google.api.services.people.v1.People.PeopleOperations;
+import com.google.api.services.people.v1.PeopleScopes;
+import com.google.api.services.people.v1.model.Address;
+import com.google.api.services.people.v1.model.GetPeopleResponse;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+import com.google.api.services.people.v1.model.Person;
+import com.google.api.services.people.v1.model.PersonResponse;
+import com.google.api.services.people.v1.model.PhoneNumber;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.gdata.client.Query;
-import com.google.gdata.client.contacts.ContactsService;
-import com.google.gdata.data.contacts.ContactEntry;
-import com.google.gdata.data.contacts.ContactFeed;
-import com.google.gdata.data.contacts.ContactGroupEntry;
-import com.google.gdata.data.contacts.ContactGroupFeed;
-import com.google.gdata.data.contacts.SystemGroup;
-import com.google.gdata.data.extensions.PhoneNumber;
-import com.google.gdata.data.extensions.StructuredPostalAddress;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ContactEntryValidator {
 
@@ -35,8 +39,9 @@ public class ContactEntryValidator {
   private static final String CLIENT_ID =
       "927409904390-plkij2qn1d77pc7ealoku3jl9bss5653.apps.googleusercontent.com";
 
-  // TODO: find constant for this
-  private static final String CONTACTS_SCOPE = "https://www.google.com/m8/feeds";
+  private static final int MAX_PAGE_SIZE = 500;
+  private static final int MAX_REQUESTS_PER_MINUTE = 5;
+  private static final int MAX_RESOURCE_NAMES = 50;
 
   private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
 
@@ -53,7 +58,7 @@ public class ContactEntryValidator {
         Joiner.on(File.separator).join(System.getProperty("user.home"), "tmp", "datastore"));
 
     AuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-        transport, jsonFactory, CLIENT_ID, clientSecret, Collections.singleton(CONTACTS_SCOPE))
+        transport, jsonFactory, CLIENT_ID, clientSecret, Collections.singleton(PeopleScopes.CONTACTS))
         .setAccessType("offline")
         .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
         .build();
@@ -65,65 +70,85 @@ public class ContactEntryValidator {
       }
     }).authorize(APP_NAME);
 
-    ContactsService service = new ContactsService(APP_NAME);
-    service.setOAuth2Credentials(credential);
+    PeopleOperations operations =
+        new People.Builder(transport, jsonFactory, credential)
+            .setApplicationName(APP_NAME)
+            .build()
+            .people();
 
-    ContactGroupFeed groupFeed = service.getFeed(
-        new URL("https://www.google.com/m8/feeds/groups/default/full"), ContactGroupFeed.class);
+    String pageToken = null;
+    do {
+      ListConnectionsResponse connectionsResponse =
+          operations
+              .connections()
+              .list("people/me")
+              .setPageToken(pageToken)
+              .setPageSize(MAX_PAGE_SIZE)
+              .execute();
 
-    String groupId = null;
-    for (ContactGroupEntry entry : groupFeed.getEntries()) {
-      SystemGroup systemGroup = entry.getExtension(SystemGroup.class);
-      if (systemGroup != null && "Contacts".equals(systemGroup.getId())) {
-        groupId = entry.getId();
-        break;
-      }
-    }
+      List<String> resourceNames =
+          connectionsResponse
+              .getConnections()
+              .stream()
+              .map(Person::getResourceName)
+              .collect(Collectors.toList());
 
-    Query query = new Query(new URL("https://www.google.com/m8/feeds/contacts/default/full"));
-    query.setMaxResults(Integer.MAX_VALUE);
-    query.setStringCustomParameter("group", Preconditions.checkNotNull(groupId));
+      RateLimiter limiter = RateLimiter.create((double) MAX_REQUESTS_PER_MINUTE / 60);
+      for (List<String> partition : Lists.partition(resourceNames, MAX_RESOURCE_NAMES)) {
+        limiter.acquire();
 
-    ContactFeed feed = service.getFeed(query, ContactFeed.class);
+        GetPeopleResponse peopleResponse =
+            operations.getBatchGet().setResourceNames(partition).execute();
 
-    System.out.println(feed.getTitle().getPlainText());
+        // TODO: filter
+        List<Person> people =
+            peopleResponse
+                .getResponses()
+                .stream()
+                .map(PersonResponse::getPerson)
+                .collect(Collectors.toList());
 
-    for (ContactEntry entry : feed.getEntries()) {
-      String name = entry.getName().getFullName().getValue();
-      boolean updated = false;
+        for (Person person : people) {
+          String name =
+              person
+                  .getNames()
+                  .stream()
+                  .filter(n -> n.getMetadata().getPrimary())
+                  .findFirst()
+                  .get()
+                  .getDisplayName();
 
-      for (PhoneNumber phoneNumber : entry.getPhoneNumbers()) {
-        String number = phoneNumber.getPhoneNumber();
+          for (PhoneNumber phoneNumber : safe(person.getPhoneNumbers())) {
+            String number  = phoneNumber.getValue();
 
-        Preconditions.checkState(
-            number.startsWith("+"),
-            name + " - " + number);
+            Preconditions.checkState(
+                number.startsWith("+"),
+                name + " - " + number);
 
-        Phonenumber.PhoneNumber proto = PHONE_NUMBER_UTIL.parse(number, null);
-        Preconditions.checkState(PHONE_NUMBER_UTIL.isValidNumber(proto), proto);
+            Phonenumber.PhoneNumber proto = PHONE_NUMBER_UTIL.parse(number, null);
+            Preconditions.checkState(PHONE_NUMBER_UTIL.isValidNumber(proto), proto);
 
-        String formatted =
-            PHONE_NUMBER_UTIL.format(proto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+            String formatted =
+                PHONE_NUMBER_UTIL.format(proto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
 
-        if (!formatted.equals(number)) {
-          System.out.println(String.format("%s - changing %s to %s", name, number, formatted));
+            if (!formatted.equals(number)) {
+              System.out.println(String.format("%s - changing %s to %s", name, number, formatted));
+            }
+          }
 
-          phoneNumber.setPhoneNumber(formatted);
-          updated = true;
+          for (Address address : safe(person.getAddresses())) {
+            if (address.getStreetAddress().contains("\n")) {
+              System.err.println(name);
+            }
+          }
         }
       }
 
-      for (StructuredPostalAddress structuredPostalAddress : entry.getStructuredPostalAddresses()) {
-        if (structuredPostalAddress.getStreet().getValue().contains("\n")) {
-          System.err.println(name);
-        }
-      }
+      pageToken = connectionsResponse.getNextPageToken();
+    } while (pageToken != null);
+  }
 
-      if (updated) {
-        entry = service.update(new URL(entry.getEditLink().getHref()), entry);
-      }
-    }
-
-    System.out.println("Total entries: " + feed.getEntries().size());
+  private static <E> List<E> safe(List<E> list) {
+    return list == null ? new ArrayList<>() : list;
   }
 }
