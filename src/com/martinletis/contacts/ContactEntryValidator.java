@@ -23,7 +23,6 @@ import com.google.gdata.data.extensions.PhoneNumber;
 import com.google.gdata.data.extensions.StructuredPostalAddress;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -64,7 +63,7 @@ public class ContactEntryValidator {
       public String getRedirectUri() throws IOException {
         return GoogleOAuthConstants.OOB_REDIRECT_URI;
       }
-    }).authorize("user");
+    }).authorize(APP_NAME);
 
     ContactsService service = new ContactsService(APP_NAME);
     service.setOAuth2Credentials(credential);
