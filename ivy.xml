@@ -21,7 +21,7 @@
        xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
     <info organisation="martinletis" module="contacts" />
 	<dependencies>
-        <dependency org="com.google.api-client" name="google-api-client" rev="1.19.1"/>
+        <dependency org="com.google.api-client" name="google-api-client" rev="1.22.0"/>
         <dependency org="com.google.gdata" name="core" rev="1.47.1"/>
         <dependency org="com.googlecode.libphonenumber" name="libphonenumber" rev="7.0.7"/>
 	</dependencies>
