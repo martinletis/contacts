@@ -5,6 +5,7 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AbstractPromptReceiver;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -23,7 +24,9 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,9 +34,8 @@ import java.util.List;
 public class ContactEntryValidator {
 
   private static final String APP_NAME = "martinletis-contacts-0.1";
-
-  private static final String CLIENT_ID =
-      "927409904390-plkij2qn1d77pc7ealoku3jl9bss5653.apps.googleusercontent.com";
+  private static final String CLIENT_SECRET =
+      "client_secret_927409904390-plkij2qn1d77pc7ealoku3jl9bss5653.apps.googleusercontent.com.json";
 
   private static final int MAX_PAGE_SIZE = 1000;
   private static final int MAX_REQUESTS_PER_MINUTE = 5;
@@ -41,13 +43,16 @@ public class ContactEntryValidator {
   private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
 
   public static void main(String[] args) throws Exception {
-    Preconditions.checkArgument(args.length == 1, "Invoke with 'clientSecret'");
-
-    String clientSecret = args[0];
-    Preconditions.checkArgument(!clientSecret.isEmpty());
-
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+
+    GoogleClientSecrets secrets;
+    try (Reader reader =
+        new FileReader(
+            Joiner.on(File.separator)
+                .join(System.getProperty("user.home"), "tmp", CLIENT_SECRET))) {
+      secrets = GoogleClientSecrets.load(jsonFactory, reader);
+    }
 
     File dataDirectory =
         new File(
@@ -57,8 +62,7 @@ public class ContactEntryValidator {
         new GoogleAuthorizationCodeFlow.Builder(
                 transport,
                 jsonFactory,
-                CLIENT_ID,
-                clientSecret,
+                secrets,
                 Collections.singleton(PeopleServiceScopes.CONTACTS_READONLY))
             .setAccessType("offline")
             .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
