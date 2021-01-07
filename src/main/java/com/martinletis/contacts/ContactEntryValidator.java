@@ -64,7 +64,7 @@ public class ContactEntryValidator {
                 jsonFactory,
                 CLIENT_ID,
                 clientSecret,
-                Collections.singleton(PeopleServiceScopes.CONTACTS))
+                Collections.singleton(PeopleServiceScopes.CONTACTS_READONLY))
             .setAccessType("offline")
             .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
             .build();
