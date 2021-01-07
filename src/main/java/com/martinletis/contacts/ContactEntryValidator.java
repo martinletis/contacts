@@ -54,21 +54,31 @@ public class ContactEntryValidator {
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-    File dataDirectory = new File(
-        Joiner.on(File.separator).join(System.getProperty("user.home"), "tmp", "datastore"));
+    File dataDirectory =
+        new File(
+            Joiner.on(File.separator).join(System.getProperty("user.home"), "tmp", "datastore"));
 
-    AuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-        transport, jsonFactory, CLIENT_ID, clientSecret, Collections.singleton(PeopleServiceScopes.CONTACTS))
-        .setAccessType("offline")
-        .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
-        .build();
+    AuthorizationCodeFlow flow =
+        new GoogleAuthorizationCodeFlow.Builder(
+                transport,
+                jsonFactory,
+                CLIENT_ID,
+                clientSecret,
+                Collections.singleton(PeopleServiceScopes.CONTACTS))
+            .setAccessType("offline")
+            .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
+            .build();
 
-    Credential credential = new AuthorizationCodeInstalledApp(flow, new AbstractPromptReceiver() {
-      @Override
-      public String getRedirectUri() throws IOException {
-        return GoogleOAuthConstants.OOB_REDIRECT_URI;
-      }
-    }).authorize(APP_NAME);
+    Credential credential =
+        new AuthorizationCodeInstalledApp(
+                flow,
+                new AbstractPromptReceiver() {
+                  @Override
+                  public String getRedirectUri() throws IOException {
+                    return GoogleOAuthConstants.OOB_REDIRECT_URI;
+                  }
+                })
+            .authorize(APP_NAME);
 
     People people =
         new PeopleService.Builder(transport, jsonFactory, credential)
@@ -119,11 +129,9 @@ public class ContactEntryValidator {
                   .getDisplayName();
 
           for (PhoneNumber phoneNumber : safe(person.getPhoneNumbers())) {
-            String number  = phoneNumber.getValue();
+            String number = phoneNumber.getValue();
 
-            Preconditions.checkState(
-                number.startsWith("+"),
-                name + " - " + number);
+            Preconditions.checkState(number.startsWith("+"), name + " - " + number);
 
             Phonenumber.PhoneNumber proto = PHONE_NUMBER_UTIL.parse(number, null);
             Preconditions.checkState(PHONE_NUMBER_UTIL.isValidNumber(proto), proto);
