@@ -35,7 +35,7 @@ public class ContactEntryValidator {
   private static final String CLIENT_ID =
       "927409904390-plkij2qn1d77pc7ealoku3jl9bss5653.apps.googleusercontent.com";
 
-  private static final int MAX_PAGE_SIZE = 500;
+  private static final int MAX_PAGE_SIZE = 1000;
   private static final int MAX_REQUESTS_PER_MINUTE = 5;
 
   private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
