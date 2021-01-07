@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.martinletis</groupId>
+  <artifactId>contacts</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+  	<dependency>
+  		<groupId>com.google.apis</groupId>
+  		<artifactId>google-api-services-people</artifactId>
+  		<version>v1-rev5-1.22.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.googlecode.libphonenumber</groupId>
+  		<artifactId>libphonenumber</artifactId>
+  		<version>7.0.7</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.google.api-client</groupId>
+  		<artifactId>google-api-client</artifactId>
+  		<version>1.30.4</version>
+  	</dependency>
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client-java6</artifactId>
+      <version>1.30.4</version>
+    </dependency>
+  </dependencies>
+</project>
