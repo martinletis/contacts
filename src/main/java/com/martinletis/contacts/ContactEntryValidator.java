@@ -10,9 +10,9 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.people.v1.People;
-import com.google.api.services.people.v1.People.PeopleOperations;
-import com.google.api.services.people.v1.PeopleScopes;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.PeopleService.People;
+import com.google.api.services.people.v1.PeopleServiceScopes;
 import com.google.api.services.people.v1.model.Address;
 import com.google.api.services.people.v1.model.GetPeopleResponse;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
@@ -64,7 +64,7 @@ public class ContactEntryValidator {
                 jsonFactory,
                 CLIENT_ID,
                 clientSecret,
-                Collections.singleton(PeopleScopes.CONTACTS))
+                Collections.singleton(PeopleServiceScopes.CONTACTS))
             .setAccessType("offline")
             .setDataStoreFactory(new FileDataStoreFactory(dataDirectory))
             .build();
@@ -80,8 +80,8 @@ public class ContactEntryValidator {
                 })
             .authorize(APP_NAME);
 
-    PeopleOperations operations =
-        new People.Builder(transport, jsonFactory, credential)
+    People people =
+        new PeopleService.Builder(transport, jsonFactory, credential)
             .setApplicationName(APP_NAME)
             .build()
             .people();
@@ -89,7 +89,7 @@ public class ContactEntryValidator {
     String pageToken = null;
     do {
       ListConnectionsResponse connectionsResponse =
-          operations
+          people
               .connections()
               .list("people/me")
               .setPageToken(pageToken)
@@ -108,17 +108,17 @@ public class ContactEntryValidator {
         limiter.acquire();
 
         GetPeopleResponse peopleResponse =
-            operations.getBatchGet().setResourceNames(partition).execute();
+            people.getBatchGet().setResourceNames(partition).execute();
 
         // TODO: filter
-        List<Person> people =
+        List<Person> persons =
             peopleResponse
                 .getResponses()
                 .stream()
                 .map(PersonResponse::getPerson)
                 .collect(Collectors.toList());
 
-        for (Person person : people) {
+        for (Person person : persons) {
           String name =
               person
                   .getNames()
