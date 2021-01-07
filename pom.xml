@@ -4,21 +4,21 @@
   <artifactId>contacts</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <dependencies>
-  	<dependency>
+    <dependency>
   	  <groupId>com.google.apis</groupId>
   	  <artifactId>google-api-services-people</artifactId>
   	  <version>v1-rev5-1.22.0</version>
-  	</dependency>
-  	<dependency>
+    </dependency>
+    <dependency>
   	  <groupId>com.googlecode.libphonenumber</groupId>
   	  <artifactId>libphonenumber</artifactId>
   	  <version>7.0.7</version>
-  	</dependency>
-  	<dependency>
+    </dependency>
+    <dependency>
   	  <groupId>com.google.api-client</groupId>
   	  <artifactId>google-api-client</artifactId>
   	  <version>1.30.4</version>
-  	</dependency>
+    </dependency>
     <dependency>
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client-java6</artifactId>
