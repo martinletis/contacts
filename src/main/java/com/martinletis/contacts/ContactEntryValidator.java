@@ -33,6 +33,8 @@ import java.util.List;
 public class ContactEntryValidator {
 
   private static final String APP_NAME = "martinletis-contacts-0.1";
+  private static final String CLIENT_SECRET =
+      "client_secret_927409904390-plkij2qn1d77pc7ealoku3jl9bss5653.apps.googleusercontent.com.json";
 
   private static final int MAX_PAGE_SIZE = 1000;
   private static final int MAX_REQUESTS_PER_MINUTE = 5;
@@ -44,7 +46,10 @@ public class ContactEntryValidator {
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
     GoogleClientSecrets secrets;
-    try (Reader reader = new FileReader(args[0])) {
+    try (Reader reader =
+        new FileReader(
+            Joiner.on(File.separator)
+                .join(System.getProperty("user.home"), "tmp", CLIENT_SECRET))) {
       secrets = GoogleClientSecrets.load(jsonFactory, reader);
     }
 
