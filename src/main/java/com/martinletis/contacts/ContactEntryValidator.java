@@ -65,18 +65,17 @@ public class ContactEntryValidator {
     Credential credential =
         new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 
-    People people =
+    PeopleService service =
         new PeopleService.Builder(transport, jsonFactory, credential)
             .setApplicationName(APP_NAME)
-            .build()
-            .people();
+            .build();
 
     RateLimiter limiter = RateLimiter.create((double) MAX_REQUESTS_PER_MINUTE / 60);
     String pageToken = null;
     do {
       limiter.acquire();
       ListConnectionsResponse connectionsResponse =
-          people
+          service.people()
               .connections()
               .list("people/me")
               .setPageToken(pageToken)
