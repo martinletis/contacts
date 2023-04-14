@@ -29,7 +29,12 @@ function listConnections(token, nextPageToken) {
       const table = document.getElementById('contacts');
       data['connections'].sort((a,b) => stringify(a).localeCompare(stringify(b))).forEach(connection => {
         const row = table.insertRow();
-        row.insertCell().appendChild(document.createTextNode(stringify(connection)));
+
+        const name = document.createElement('a');
+        name.appendChild(document.createTextNode(stringify(connection)));
+        name.href = 'https://contacts.google.com/person/' + connection['resourceName'].split('/').at(-1);
+        name.target = '_blank';
+        row.insertCell().appendChild(name);
 
         const phoneNumbers = row.insertCell();
         if (connection['phoneNumbers']) {
@@ -41,24 +46,40 @@ function listConnections(token, nextPageToken) {
               phoneNumbers.bgColor = '#ee9090';
             }
 
+            // Validation: value must be a valid number
             const proto = phoneNumberUtil.parse(number);
             if (!phoneNumberUtil.isValidNumber(proto)) {
               phoneNumbers.bgColor = '#ee9090';
             }
 
+            // Validation: international number format is stable
             if (number != phoneNumberUtil.format(proto, i18n.phonenumbers.PhoneNumberFormat.INTERNATIONAL)) {
               phoneNumbers.bgColor = '#ee9090';
             }
           });
         }
 
-        // contains '\n'
         const addresses = row.insertCell();
         if (connection['addresses']) {
           addresses.appendChild(document.createTextNode(connection['addresses'].map(address => address['formattedValue'])));
           connection['addresses'].forEach(address => {
             // Validation: streetAddress must not contain '\n'
             if (address['streetAddress'].includes('\n')) {
+              addresses.bgColor = '#ee9090';
+            }
+
+            // Validation: extendedAddress is undefined
+            if (address['extendedAddress']) {
+              addresses.bgColor = '#ee9090';
+            }
+
+            // Validation: city is defined
+            if (!address['city']) {
+              addresses.bgColor = '#ee9090';
+            }
+
+            // Validation: italian address does not start with a number
+            if (address['country']=='IT' && address['streetAddress'].match(/^\d/)) {
               addresses.bgColor = '#ee9090';
             }
           })
