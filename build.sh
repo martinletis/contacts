@@ -1,6 +1,6 @@
-CLOSURE_COMPILER_JAR=$HOME/bin/closure-compiler-v20230411.jar
+ # CLOSURE_COMPILER_JAR=$HOME/bin/closure-compiler-v00000000.jar
 
-java -jar $CLOSURE_COMPILER_JAR \
+java -jar ${CLOSURE_COMPILER_JAR:?} \
   --entry_point='goog:com.martinletis.contacts' \
   --js_output_file='contacts-compiled.js' \
   --js='contacts.js' \
