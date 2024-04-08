@@ -82,7 +82,7 @@ function listConnections(token, nextPageToken) {
             if (address['country']=='IT' && address['streetAddress'].match(/^\d/)) {
               addresses.bgColor = '#ee9090';
             }
-          })
+          });
         }
 
         const birthdays = row.insertCell();
