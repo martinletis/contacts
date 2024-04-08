@@ -21,7 +21,7 @@ function listConnections(token, nextPageToken) {
   if (nextPageToken) {
     url.searchParams.append('pageToken', nextPageToken);
   }
-  url.searchParams.append('personFields', 'names,organizations,phoneNumbers,addresses');
+  url.searchParams.append('personFields', 'names,organizations,phoneNumbers,addresses,birthdays');
 
   fetch(url, {headers: {'Authorization': 'Bearer ' + token}})
     .then(response => response.json())
@@ -83,6 +83,17 @@ function listConnections(token, nextPageToken) {
               addresses.bgColor = '#ee9090';
             }
           })
+        }
+
+        const birthdays = row.insertCell();
+        if (connection['birthdays']) {
+          birthdays.appendChild(document.createTextNode(connection['birthdays'].filter(birthday => birthday['date']).map(
+            birthday => new Date(birthday['date']['year'], birthday['date']['month'], birthday['date']['day']).toDateString())));
+          connection['birthdays'].forEach(birthday => {
+            if (!birthday['date']) {
+              birthdays.bgColor = '#ee9090';
+            }
+          });
         }
       });
       if (data['nextPageToken']) {
