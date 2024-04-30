@@ -2,6 +2,9 @@
 # https://mvnrepository.com/artifact/com.google.javascript/closure-compiler
 # CLOSURE_COMPILER_JAR=$HOME/bin/closure-compiler-v00000000.jar
 
+# git clone git@github.com:google/closure-library.git
+# git clone git@github.com:google/libphonenumber.git
+
 java -jar ${CLOSURE_COMPILER_JAR:?} \
   --entry_point='goog:com.martinletis.contacts' \
   --js_output_file='contacts-compiled.js' \
