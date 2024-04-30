@@ -1,4 +1,6 @@
- # CLOSURE_COMPILER_JAR=$HOME/bin/closure-compiler-v00000000.jar
+# https://developers.google.com/closure/compiler/docs/gettingstarted_app
+# https://mvnrepository.com/artifact/com.google.javascript/closure-compiler
+# CLOSURE_COMPILER_JAR=$HOME/bin/closure-compiler-v00000000.jar
 
 java -jar ${CLOSURE_COMPILER_JAR:?} \
   --entry_point='goog:com.martinletis.contacts' \
