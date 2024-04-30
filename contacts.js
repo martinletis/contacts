@@ -109,6 +109,8 @@ function initAuth() {
     'callback': (tokenResponse) => {
       listConnections(tokenResponse.access_token, undefined);
     },
+    prompt: '',
+    enable_granular_consent: false,
   });
   
   client.requestAccessToken();
