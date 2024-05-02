@@ -107,8 +107,8 @@ function initAuth() {
     'client_id': '927409904390-9tidmge2ih2brcffsmt41t82knnucss4.apps.googleusercontent.com',
     'scope': 'https://www.googleapis.com/auth/contacts.readonly',
     'callback': tokenResponse => listConnections(tokenResponse.access_token, undefined),
-    prompt: '',
-    enable_granular_consent: false,
+    'prompt': '',
+    'enable_granular_consent': false,
   });
   
   client.requestAccessToken();
