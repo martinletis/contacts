@@ -15,7 +15,7 @@ function stringify(connection) {
 }
 
 // https://developers.google.com/people/api/rest/v1/people.connections/list
-function listConnections(token, nextPageToken) {
+function listConnections(tokenResponse, nextPageToken) {
   const url = new URL('https://people.googleapis.com/v1/people/me/connections');
   url.searchParams.append('pageSize', '1000');
   if (nextPageToken) {
@@ -23,7 +23,7 @@ function listConnections(token, nextPageToken) {
   }
   url.searchParams.append('personFields', 'names,organizations,phoneNumbers,addresses,birthdays');
 
-  fetch(url, {headers: {'Authorization': 'Bearer ' + token}})
+  fetch(url, {headers: {'Authorization': 'Bearer ' + tokenResponse.access_token}})
     .then(response => response.json())
     .then(data => {
       const table = document.getElementById('contacts');
@@ -97,7 +97,7 @@ function listConnections(token, nextPageToken) {
         }
       });
       if (data['nextPageToken']) {
-        listConnections(token, data['nextPageToken']);
+        listConnections(tokenResponse, data['nextPageToken']);
       }
     });
 }
@@ -106,9 +106,8 @@ function initAuth() {
   const client = google.accounts.oauth2.initTokenClient({
     'client_id': '927409904390-9tidmge2ih2brcffsmt41t82knnucss4.apps.googleusercontent.com',
     'scope': 'https://www.googleapis.com/auth/contacts.readonly',
-    'callback': tokenResponse => listConnections(tokenResponse.access_token, undefined),
+    'callback': listConnections,
     'prompt': '',
-    'enable_granular_consent': false,
     'error_callback': error => console.warn(JSON.stringify(error)),
   });
   
