@@ -14,20 +14,21 @@ function stringify(connection) {
   return '';
 }
 
-// https://developers.google.com/people/api/rest/v1/people.connections/list
 function listConnections(tokenResponse, nextPageToken) {
-  const url = new URL('https://people.googleapis.com/v1/people/me/connections');
-  url.searchParams.append('pageSize', '1000');
-  if (nextPageToken) {
-    url.searchParams.append('pageToken', nextPageToken);
-  }
-  url.searchParams.append('personFields', 'names,organizations,phoneNumbers,addresses,birthdays');
-
-  fetch(url, {headers: {'Authorization': 'Bearer ' + tokenResponse.access_token}})
-    .then(response => response.json())
-    .then(data => {
+  // https://developers.google.com/people/api/rest/v1/people.connections/list
+  gapi.client.people.people.connections.list({
+    'resourceName': 'people/me',
+    'pageSize': 1000,
+    'pageToken': nextPageToken,
+    'personFields': ['names', 'organizations', 'phoneNumbers', 'addresses', 'birthdays'].join(','),
+  })
+    .then(response => response.result)
+    .then(result => {
+      console.debug(result);
       const table = document.getElementById('contacts');
-      data['connections'].sort((a,b) => stringify(a).localeCompare(stringify(b))).forEach(connection => {
+
+      // TODO(martin.letis): global sort?
+      result['connections'].sort((a,b) => stringify(a).localeCompare(stringify(b))).forEach(connection => {
         const row = table.insertRow();
 
         const name = document.createElement('a');
@@ -96,8 +97,8 @@ function listConnections(tokenResponse, nextPageToken) {
           });
         }
       });
-      if (data['nextPageToken']) {
-        listConnections(tokenResponse, data['nextPageToken']);
+      if (result['nextPageToken']) {
+        listConnections(tokenResponse, result['nextPageToken']);
       }
     });
 }
@@ -113,5 +114,11 @@ function initAuth() {
   
   client.requestAccessToken();
 } 
- 
-goog.exportSymbol('initAuth', initAuth);
+
+function initGapi() {
+  gapi.client.init({
+    'discoveryDocs': ['https://people.googleapis.com/$discovery/rest?version=v1'],
+  }).then(initAuth);
+}
+
+gapi.load('client', initGapi);
